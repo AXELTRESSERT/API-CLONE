@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLONE API DASHBOARD</title>
+    <style>
+        /* ALL YOUR ORIGINAL CSS HERE (SAME AS BEFORE) */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; min-height: 100vh; }
+        .container { width: 100%; max-width: 1200px; padding: 20px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .status-message { background: rgba(76, 201, 240, 0.2); padding: 15px; border-radius: 8px; margin-bottom: 30px; text-align: center; font-size: 18px; font-weight: 600; }
+        .api-stats { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 30px; text-align: center; }
+        .api-count { font-size: 24px; color: #4cc9f0; font-weight: 700; }
+        .menu-section { margin-bottom: 30px; }
+        .section-title { font-size: 20px; margin-bottom: 15px; color: #4cc9f0; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .api-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .api-item { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; transition: all 0.3s ease; }
+        .api-item:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-3px); }
+        .api-name { margin-bottom: 10px; text-align: center; font-weight: 500; }
+        .get-btn { background: #4361ee; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; transition: all 0.3s ease; width: 80px; }
+        .get-btn:hover { background: #3a56d4; }
+        .logout-btn { background: #ff4757; }
+        .logout-btn:hover { background: #ff3838; }
+        .footer { margin-top: 40px; text-align: center; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.6); font-size: 14px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: #ff4757; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+        .modal-title { color: #4cc9f0; margin-bottom: 20px; font-size: 24px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .download-btn { background: #2ed573; color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s ease; width: 100%; }
+        .download-btn:hover { background: #25c462; }
+        .result-container { margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; }
+        .result-json { background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 5px; font-family: monospace; font-size: 14px; white-space: pre-wrap; margin-bottom: 15px; }
+        .video-preview { width: 100%; max-height: 300px; border-radius: 8px; margin-top: 15px; }
+        .loading { display: none; text-align: center; margin: 20px 0; }
+        .loading::after { content: ''; display: inline-block; width: 20px; height: 20px; border: 3px solid #4cc9f0; border-top: 3px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 768px) { .api-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CLONE API DASHBOARD</h1>
+            <button onclick="window.location.href='?logout=1'" class="get-btn logout-btn">KELUAR</button>
+        </div>
+        
+        <div class="status-message">
+            CLONE API IS ONLINE - <?php echo $is_vercel ? 'VERCEL' : ($is_termux ? 'TERMUX' : 'LOCAL'); ?> MODE
+        </div>
+        
+        <div class="api-stats">
+            <p>CLONE API JUMLAH API: <span class="api-count">70</span></p>
+        </div>
+        
+        <!-- DOWNLOADER MENU -->
+        <div class="menu-section">
+            <h2 class="section-title">DOWNLOADER</h2>
+            <div class="api-grid">
+                <?php
+                $downloader_apis = ['youtube', 'tiktok', 'capcut', 'facebook', 'videy', 'ytmp3'];
+                foreach ($downloader_apis as $api):
+                ?>
+                <div class="api-item">
+                    <div class="api-name"><?php echo strtoupper($api); ?></div>
+                    <button class="get-btn" onclick="<?php echo $api === 'tiktok' ? 'openTikTokModal()' : "showAPI('" . $api . "')"; ?>">
+                        GET
+                    </button>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        
+        <!-- OTHER MENUS (SAME STRUCTURE) -->
+        <!-- 18+ Menu -->
+        <div class="menu-section">
+            <h2 class="section-title">18+ MENU</h2>
+            <div class="api-grid">
+                <?php
+                $adult_apis = ['neko', 'hentaivid', 'pussy', 'trap', 'henwaifu', 'xnx', 'elaina', 'shiroko', 'miyabi', 'mikasa ackerman', 'hitori bocchi', 'nico robin', 'asuna yuuki', 'rukia', 'zero two', 'kaguya'];
+                foreach ($adult_apis as $api):
+                ?>
+                <div class="api-item">
+                    <div class="api-name"><?php echo strtoupper(str_replace('_', ' ', $api)); ?></div>
+                    <button class="get-btn" onclick="showAPI('<?php echo $api; ?>')">GET</button>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        
+        <!-- Add other menu sections here (stalk, maker, etc.) -->
+        <!-- Keep your original menu structure -->
+        
+        <div class="footer">
+            © CLONE TRESSERT - <?php echo $is_vercel ? 'VERCEL' : 'TERMUX'; ?> EDITION
+        </div>
+    </div>
+
+    <!-- TIKTOK MODAL -->
+    <div class="modal" id="tiktokModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <h2 class="modal-title">DOWNLOADER TIKTOK</h2>
+            
+            <form method="POST" action="">
+                <div class="input-group">
+                    <label for="tiktok_url">LINK TIKTOK</label>
+                    <input type="text" id="tiktok_url" name="tiktok_url" 
+                           placeholder="https://www.tiktok.com/@username/video/123456789" 
+                           value="<?php echo isset($_POST['tiktok_url']) ? htmlspecialchars($_POST['tiktok_url']) : ''; ?>" required>
+                </div>
+                
+                <button type="submit" class="download-btn">UNDUH</button>
+            </form>
+            
+            <?php if ($download_result): ?>
+            <div class="result-container">
+                <div class="result-json">
+<?php 
+if ($download_result['status']) {
+    echo "{ \n";
+    echo "status: 200\n";
+    echo "type: " . ($download_result['type'] ?? 'tiktok') . "\n";
+    echo "quality: " . ($download_result['quality'] ?? 'hd') . "\n";
+    echo "author: " . ($download_result['author'] ?? 'user') . "\n";
+    echo "title: " . ($download_result['title'] ?? 'Video TikTok') . "\n";
+    echo "message: " . ($download_result['message'] ?? 'Success') . "\n";
+    echo "environment: " . ($is_vercel ? 'VERCEL' : 'TERMUX') . "\n";
+    echo "}\n";
+} else {
+    echo "{ \n";
+    echo "status: 500\n";
+    echo "error: \"" . ($download_result['message'] ?? 'Unknown error') . "\"\n";
+    echo "type: tiktok\n";
+    echo "}\n";
+}
+?>
+                </div>
+                
+                <?php if (!empty($download_result['video_url'])): ?>
+                <video controls class="video-preview">
+                    <source src="<?php echo htmlspecialchars($download_result['video_url']); ?>" type="video/mp4">
+                    Browser tidak support video tag.
+                </video>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <script>
+        // MODAL FUNCTIONS
+        function openTikTokModal() {
+            document.getElementById('tiktokModal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('tiktokModal').style.display = 'none';
+        }
+        
+        function showAPI(apiName) {
+            alert('API Endpoint: https://cloneapi.vercel.app/api/' + apiName);
+        }
+        
+        // CLOSE MODAL ON OUTSIDE CLICK
+        window.onclick = function(event) {
+            const modal = document.getElementById('tiktokModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // AUTO OPEN MODAL IF FORM WAS SUBMITTED
+        <?php if (isset($_POST['tiktok_url'])): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            openTikTokModal();
+            setTimeout(function() {
+                document.querySelector('.result-container').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        });
+        <?php endif; ?>
+    </script>
+</body>
+</html>
